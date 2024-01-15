@@ -19,5 +19,5 @@ public:
 	Particle(float inRadius, glm::vec4 inColor, glm::vec3 inPosition, glm::vec3 inVelocity, glm::vec3 inAcceleration);
 	//~Particle();
 
-	void updateParticle();
+	void updateParticle(double deltaTime);
 };

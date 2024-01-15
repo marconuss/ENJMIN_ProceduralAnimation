@@ -28,6 +28,8 @@ struct VertexShaderAdditionalData{
 
 struct MyViewer : Viewer {
 
+	double lastFrameElapsedTime = 0;
+
 	glm::vec3 jointPosition;
 	glm::vec3 cubePosition;
 	glm::vec3 ballPosition;
@@ -57,7 +59,7 @@ struct MyViewer : Viewer {
 
 		altKeyPressed = false;
 
-		particles.push_back(Particle(0.1f, white, glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, 0.f, -0.1f), glm::vec3(0.f, 0.f, 0.f)));
+		particles.push_back(Particle(0.01f, white, glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, -0.1f, 0.f), glm::vec3(0.f, 0.f, 0.f)));
 
 		additionalShaderData.Pos = { 0.,0.,0. };
 	}
@@ -79,9 +81,11 @@ struct MyViewer : Viewer {
 		pCustomShaderData = &additionalShaderData;
 		CustomShaderDataSize = sizeof(VertexShaderAdditionalData);
 
-		for each (Particle p in particles) {
-			p.updateParticle();
+		for(Particle& p : particles) {
+			p.updateParticle(elapsedTime- lastFrameElapsedTime);
 		}
+
+		lastFrameElapsedTime = elapsedTime;
 	}
 
 	void render3D_custom(const RenderApi3D& api) const override {
