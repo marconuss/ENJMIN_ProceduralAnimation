@@ -1,8 +1,10 @@
 #include "viewer.h"
 #include "drawbuffer.h"
 #include "renderapi.h"
+#include "libs.h"
 
 #include <time.h>
+#include <vector>
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 #include <glm/mat4x4.hpp>
@@ -30,6 +32,8 @@ struct MyViewer : Viewer {
 	glm::vec3 cubePosition;
 	glm::vec3 ballPosition;
 	float boneAngle;
+
+	std::vector<Particle> particles;
 	
 	glm::vec2 mousePos;
 	
@@ -53,6 +57,8 @@ struct MyViewer : Viewer {
 
 		altKeyPressed = false;
 
+		particles.push_back(Particle(0.1f, white, glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, 0.f, -0.1f), glm::vec3(0.f, 0.f, 0.f)));
+
 		additionalShaderData.Pos = { 0.,0.,0. };
 	}
 
@@ -72,6 +78,10 @@ struct MyViewer : Viewer {
 
 		pCustomShaderData = &additionalShaderData;
 		CustomShaderDataSize = sizeof(VertexShaderAdditionalData);
+
+		for each (Particle p in particles) {
+			p.updateParticle();
+		}
 	}
 
 	void render3D_custom(const RenderApi3D& api) const override {
@@ -121,6 +131,11 @@ struct MyViewer : Viewer {
 			};
 			api.lines(vertices, COUNTOF(vertices), white, nullptr);
 		}
+
+		for each (Particle p in particles) {
+			api.solidSphere(p.position, p.radius, 5, 5, p.color);
+		}
+
 	}
 
 	void render2D(const RenderApi2D& api) const override {

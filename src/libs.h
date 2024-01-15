@@ -10,14 +10,14 @@
 struct Particle
 {
 public:
-	float size;
+	float radius;
 	glm::vec4 color;
 	glm::vec3 position;
 	glm::vec3 velocity;
 	glm::vec3 acceleration;
 
-	Particle(float inSize, glm::vec4 inColor, glm::vec3 inPosition, glm::vec3 inVelocity, glm::vec3 inAcceleration);
-	~Particle();
+	Particle(float inRadius, glm::vec4 inColor, glm::vec3 inPosition, glm::vec3 inVelocity, glm::vec3 inAcceleration);
+	//~Particle();
 
 	void updateParticle();
 };
