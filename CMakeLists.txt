@@ -41,6 +41,7 @@ set(SOURCE_FILES
 	src/renderengine.cpp
 	src/renderapi.cpp
 	src/viewer.cpp
+	src/libs.cpp
 	thirdparty/glad/glad.c
 	thirdparty/imgui/imgui.cpp
 	thirdparty/imgui/imgui_demo.cpp

@@ -28,6 +28,7 @@ struct MyViewer : Viewer {
 
 	glm::vec3 jointPosition;
 	glm::vec3 cubePosition;
+	glm::vec3 ballPosition;
 	float boneAngle;
 	
 	glm::vec2 mousePos;
@@ -45,6 +46,7 @@ struct MyViewer : Viewer {
 	void init() override {
 		cubePosition = glm::vec3(1.f, 0.25f, -1.f);
 		jointPosition = glm::vec3(-1.f, 2.f, -1.f);
+		ballPosition = glm::vec3(-1.f, 0.5f, 1.f);
 		boneAngle = 0.f;
 		mousePos = { 0.f, 0.f };
 		leftMouseButtonPressed = false;
@@ -110,7 +112,7 @@ struct MyViewer : Viewer {
 			api.solidSphere(childAbsPos, 0.05f, 10, 10, white);
 		}
 
-		api.solidSphere(glm::vec3(-1.f, 0.5f, 1.f), 0.5f, 100, 100, white);
+		api.solidSphere(ballPosition, 0.5f, 100, 100, white);
 
 		{
 			glm::vec3 vertices[] = {
