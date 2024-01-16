@@ -32,7 +32,7 @@ struct VertexShaderAdditionalData {
 struct MyViewer : Viewer {
 
 	double lastFrameElapsedTime = 0;
-
+	//particles
 	std::vector<Particle> particles;
 	float particleRadius = 0.05f;
 	float particleLifetime = 5.f;
@@ -43,7 +43,13 @@ struct MyViewer : Viewer {
 	double spawningTimer = 0;
 	glm::vec3 particleDirection;
 	float initialVelocityFactor = 1;
-	
+
+	//boids
+	std::vector<Boid> boids;
+	float coherence;
+	float separation;
+	float alignment;
+	float visualRange;
 
 	glm::vec3 jointPosition;
 	glm::vec3 cubePosition;
@@ -63,6 +69,10 @@ struct MyViewer : Viewer {
 	MyViewer() : Viewer(viewerName, 1280, 720) {}
 
 	void init() override {
+		coherence = 0.5f;
+		separation = 1.f;
+		alignment = 1.f;
+		visualRange = 0.1f;
 
 		cubePosition = glm::vec3(1.f, 0.25f, -1.f);
 		jointPosition = glm::vec3(-1.f, 2.f, -1.f);
@@ -73,6 +83,18 @@ struct MyViewer : Viewer {
 
 		altKeyPressed = false;
 
+
+		for (int i = 0; i < 200; i++)
+		{
+			float xrand = (4*rand() / (float)RAND_MAX) -2; 
+			float yrand = (4*rand() / (float)RAND_MAX); 
+			float zrand = (4*rand() / (float)RAND_MAX) -2; 
+			glm::vec3 randomPos = glm::vec3(xrand, yrand, zrand);
+			glm::vec3 initialRandomAcceleration = glm::vec3(-1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (1 - (-1.0f)))), -1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (1.0f - (-1.0f)))), -1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (1.0f - (-1.0f)))));
+
+			boids.push_back(Boid(randomPos, glm::vec3(0.f, 0.f, 0.f), initialRandomAcceleration));
+		}
+		
 		additionalShaderData.Pos = { 0.,2.,0. };
 		additionalShaderData.bouncePower = 1.f;
 		additionalShaderData.bounceRadius = 2.f;
@@ -80,6 +102,8 @@ struct MyViewer : Viewer {
 
 
 	void update(double elapsedTime) override {
+
+		float deltaTime = elapsedTime - lastFrameElapsedTime;
 
 		boneAngle = (float)elapsedTime;
 
@@ -96,6 +120,7 @@ struct MyViewer : Viewer {
 		pCustomShaderData = &additionalShaderData;
 		CustomShaderDataSize = sizeof(VertexShaderAdditionalData);
 
+		/*
 		spawningTimer += (elapsedTime - lastFrameElapsedTime);
 		if(spawningTimer > 1/spawningRate)
 		{
@@ -114,6 +139,22 @@ struct MyViewer : Viewer {
 				++it;
 			}
 		}
+		*/
+
+		std::vector<struct Boid>::iterator it;
+		for (it = boids.begin(); it < boids.end();) {
+			glm::vec3 sep = it->separation(boids, separation);
+			glm::vec3 ali = it->alignment(boids, visualRange, alignment);
+			glm::vec3 coe = it->cohesion(boids, visualRange, coherence);
+
+			it->acceleration += sep;
+			it->acceleration += ali;
+			it->acceleration += coe;
+
+			it->updateBoid(deltaTime);
+			++it;
+		}
+
 
 		lastFrameElapsedTime = elapsedTime;
 	}
@@ -166,8 +207,10 @@ struct MyViewer : Viewer {
 			api.lines(vertices, COUNTOF(vertices), white, nullptr);
 		}*/
 
-		for each (Particle p in particles) {
-			api.solidSphere(p.position, p.radius, 5, 5, p.color);
+		for each(Boid b in boids)
+		{
+			api.solidSphere(b.position, 0.05f, 5, 5, white);
+
 		}
 
 	}
@@ -226,15 +269,24 @@ struct MyViewer : Viewer {
 		ImGui::ColorEdit4("Background color", (float*)&backgroundColor, ImGuiColorEditFlags_NoInputs);
 
 		ImGui::Separator();
-		ImGui::SliderInt("Particle SpawningRate", &spawningRate, 1, 1000);
-		ImGui::SliderFloat("Particle Radius", &particleRadius, 0.01f, 0.1f);
-		ImGui::SliderFloat("Gravity Intensity", &gravityIntensity, -0.1f, -10.f);
-		ImGui::SliderFloat("Particle Lifetime", &particleLifetime, 0.1f, 10.f);
-		ImGui::SliderFloat("Particle Bounciness", &particleBounciness, 0.1f, 1.f);
-		ImGui::SliderFloat("Initial Velocity Factor", &initialVelocityFactor, 1.f, 10.f);
-		ImGui::ColorEdit4("Particle color", (float*)&particleColor, ImGuiColorEditFlags_NoInputs);
-			
+		// particles
+		
+		//ImGui::SliderInt("Particle SpawningRate", &spawningRate, 1, 1000);
+		//ImGui::SliderFloat("Particle Radius", &particleRadius, 0.01f, 0.1f);
+		//ImGui::SliderFloat("Gravity Intensity", &gravityIntensity, -0.1f, -10.f);
+		//ImGui::SliderFloat("Particle Lifetime", &particleLifetime, 0.1f, 10.f);
+		//ImGui::SliderFloat("Particle Bounciness", &particleBounciness, 0.1f, 1.f);
+		//ImGui::SliderFloat("Initial Velocity Factor", &initialVelocityFactor, 1.f, 10.f);
+		//ImGui::ColorEdit4("Particle color", (float*)&particleColor, ImGuiColorEditFlags_NoInputs);
 
+		//boids
+		ImGui::SliderFloat("Coherence", &coherence, 0.f, 3.f);
+		ImGui::SliderFloat("Separation", &separation, 0.f, 3.f);
+		ImGui::SliderFloat("Alignment", &alignment, 0.f, 3.f);
+		ImGui::SliderFloat("Visual Range", &visualRange, 0.f, 3.f);
+
+
+		ImGui::Separator();
 		//ImGui::SliderFloat("Point size", &pointSize, 0.1f, 10.f);
 		//ImGui::SliderFloat("Line Width", &lineWidth, 0.1f, 10.f);
 		//ImGui::Separator();
