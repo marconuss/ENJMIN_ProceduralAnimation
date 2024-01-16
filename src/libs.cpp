@@ -9,12 +9,6 @@ Particle::Particle(float inRadius, glm::vec4 inColor, glm::vec3 inPosition, glm:
 	acceleration = inAcceleration;
 }
 
-
-/*Particle::~Particle()
-{
-	delete this;
-}
-*/
 void Particle::updateParticle(double deltaTime)
 {
 	velocity += acceleration* (float)deltaTime;

@@ -22,7 +22,7 @@ constexpr glm::vec4 green = { 0.f, 1.f, 0.f, 1.f };
 constexpr glm::vec4 red = { 1.f, 0.f, 0.f, 1.f };
 
 
-struct VertexShaderAdditionalData{
+struct VertexShaderAdditionalData {
 	glm::vec3 Pos;
 };
 
@@ -30,15 +30,17 @@ struct MyViewer : Viewer {
 
 	double lastFrameElapsedTime = 0;
 
+	int numberOfParticles = 10;
+
 	glm::vec3 jointPosition;
 	glm::vec3 cubePosition;
 	glm::vec3 ballPosition;
 	float boneAngle;
 
 	std::vector<Particle> particles;
-	
+
 	glm::vec2 mousePos;
-	
+
 	bool leftMouseButtonPressed;
 	bool altKeyPressed;
 
@@ -59,13 +61,19 @@ struct MyViewer : Viewer {
 
 		altKeyPressed = false;
 
-		particles.push_back(Particle(0.01f, white, glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, -0.1f, 0.f), glm::vec3(0.f, 0.f, 0.f)));
+		for (int i = 0; i < numberOfParticles; i++)
+		{
+			particles.push_back(Particle(0.05f, white, glm::vec3( 0.1f*i, 1.f, 0.f), glm::vec3(0.f, -0.1f, 0.f), glm::vec3(0.f, 0.f, 0.f)));
+		}
 
 		additionalShaderData.Pos = { 0.,0.,0. };
 	}
 
 
 	void update(double elapsedTime) override {
+
+
+
 		boneAngle = (float)elapsedTime;
 
 		leftMouseButtonPressed = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
@@ -81,8 +89,8 @@ struct MyViewer : Viewer {
 		pCustomShaderData = &additionalShaderData;
 		CustomShaderDataSize = sizeof(VertexShaderAdditionalData);
 
-		for(Particle& p : particles) {
-			p.updateParticle(elapsedTime- lastFrameElapsedTime);
+		for (Particle& p : particles) {
+			p.updateParticle(elapsedTime - lastFrameElapsedTime);
 		}
 
 		lastFrameElapsedTime = elapsedTime;
@@ -90,7 +98,7 @@ struct MyViewer : Viewer {
 
 	void render3D_custom(const RenderApi3D& api) const override {
 		//Here goes your drawcalls affected by the custom vertex shader
-		api.horizontalPlane({ 0, 2, 0 }, { 4, 4 }, 200, glm::vec4(0.0f, 0.2f, 1.f, 1.f));
+		//api.horizontalPlane({ 0, 2, 0 }, { 4, 4 }, 200, glm::vec4(0.0f, 0.2f, 1.f, 1.f));
 	}
 
 	void render3D(const RenderApi3D& api) const override {
@@ -99,7 +107,7 @@ struct MyViewer : Viewer {
 		api.grid(10.f, 10, glm::vec4(0.5f, 0.5f, 0.5f, 1.f), nullptr);
 
 		api.axisXYZ(nullptr);
-		
+		/*
 		constexpr float cubeSize = 0.5f;
 		glm::mat4 cubeModelMatrix = glm::translate(glm::identity<glm::mat4>(), cubePosition);
 		api.solidCube(cubeSize, white, &cubeModelMatrix);
@@ -134,7 +142,7 @@ struct MyViewer : Viewer {
 				{ mouseRayPos.x + mouseRayDir.x * 10.f, mouseRayPos.y + mouseRayDir.y * 10.f, mouseRayPos.z + mouseRayDir.z * 10.f},
 			};
 			api.lines(vertices, COUNTOF(vertices), white, nullptr);
-		}
+		}*/
 
 		for each (Particle p in particles) {
 			api.solidSphere(p.position, p.radius, 5, 5, p.color);
@@ -143,17 +151,19 @@ struct MyViewer : Viewer {
 	}
 
 	void render2D(const RenderApi2D& api) const override {
-		
+
 		constexpr float padding = 50.f;
 
 		if (altKeyPressed) {
 			if (leftMouseButtonPressed) {
 				api.circleFill(mousePos, padding, 10, white);
-			} else {
+			}
+			else {
 				api.circleContour(mousePos, padding, 10, white);
 			}
-				
-		} else {
+
+		}
+		else {
 			const glm::vec2 min = mousePos + glm::vec2(padding, padding);
 			const glm::vec2 max = mousePos + glm::vec2(-padding, -padding);
 			if (leftMouseButtonPressed) {
@@ -163,7 +173,7 @@ struct MyViewer : Viewer {
 				api.quadContour(min, max, white);
 			}
 		}
-
+		/*
 		{
 			const glm::vec2 from = { viewportWidth * 0.5f, padding };
 			const glm::vec2 to = { viewportWidth * 0.5f, 2.f * padding };
@@ -181,6 +191,7 @@ struct MyViewer : Viewer {
 			};
 			api.lines(vertices, COUNTOF(vertices), white);
 		}
+		*/
 	}
 
 	void drawGUI() override {
@@ -192,25 +203,27 @@ struct MyViewer : Viewer {
 
 		ImGui::ColorEdit4("Background color", (float*)&backgroundColor, ImGuiColorEditFlags_NoInputs);
 
-		ImGui::SliderFloat("Point size", &pointSize, 0.1f, 10.f);
-		ImGui::SliderFloat("Line Width", &lineWidth, 0.1f, 10.f);
-		ImGui::Separator();
+		ImGui::SliderInt("number of particles", &numberOfParticles, 0, 100);
+
+		//ImGui::SliderFloat("Point size", &pointSize, 0.1f, 10.f);
+		//ImGui::SliderFloat("Line Width", &lineWidth, 0.1f, 10.f);
+		//ImGui::Separator();
 		ImGui::SliderFloat3("Light Position", (float(&)[3])lightPosition, -10.f, 10.f);
 		ImGui::SliderFloat("Ligh Ambient", &lightAmbient, 0.f, 0.5f);
 		ImGui::SliderFloat("Ligh Specular", &lightSpecular, 0.f, 1.f);
 		ImGui::SliderFloat("Ligh Specular Pow", &lightSpecularPow, 1.f, 200.f);
-		ImGui::Separator();
-		ImGui::SliderFloat3("CustomShader_Pos", &additionalShaderData.Pos.x, -10.f, 10.f);
+		//ImGui::Separator();
+		//ImGui::SliderFloat3("CustomShader_Pos", &additionalShaderData.Pos.x, -10.f, 10.f);
 		ImGui::Separator();
 		float fovDegrees = glm::degrees(camera.fov);
 		if (ImGui::SliderFloat("Camera field of fiew (degrees)", &fovDegrees, 15, 180)) {
 			camera.fov = glm::radians(fovDegrees);
 		}
 
-		ImGui::SliderFloat3("Cube Position", (float(&)[3])cubePosition, -1.f, 1.f);
+		//ImGui::SliderFloat3("Cube Position", (float(&)[3])cubePosition, -1.f, 1.f);
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		
+
 		ImGui::End();
 
 		if (showDemoWindow) {
