@@ -14,7 +14,7 @@ Particle::Particle(float inRadius, float inLifetime, glm::vec4 inColor, glm::vec
 void Particle::updateParticle(double deltaTime)
 {
 	if (position.y-radius < 0.02f && velocity.y < 0) {
-		velocity.y = -velocity.y*0.8;
+		velocity.y = -velocity.y*bounciness;
 	}
 	velocity += acceleration* (float)deltaTime;
 	position += velocity* (float)deltaTime;

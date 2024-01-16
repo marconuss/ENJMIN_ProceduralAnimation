@@ -30,18 +30,22 @@ struct MyViewer : Viewer {
 
 	double lastFrameElapsedTime = 0;
 
+	std::vector<Particle> particles;
+	float particleRadius = 0.05f;
 	float particleLifetime = 5.f;
 	float particleBounciness = 0.8f;
 	glm::vec4 particleColor = white;
 	int spawningRate = 100;
 	float gravityIntensity = -3;
+	double spawningTimer = 0;
+	glm::vec3 particleDirection;
+	float initialVelocityFactor = 1;
+	
 
 	glm::vec3 jointPosition;
 	glm::vec3 cubePosition;
 	glm::vec3 ballPosition;
 	float boneAngle;
-
-	std::vector<Particle> particles;
 
 	glm::vec2 mousePos;
 
@@ -56,6 +60,7 @@ struct MyViewer : Viewer {
 	MyViewer() : Viewer(viewerName, 1280, 720) {}
 
 	void init() override {
+
 		cubePosition = glm::vec3(1.f, 0.25f, -1.f);
 		jointPosition = glm::vec3(-1.f, 2.f, -1.f);
 		ballPosition = glm::vec3(-1.f, 0.5f, 1.f);
@@ -64,11 +69,6 @@ struct MyViewer : Viewer {
 		leftMouseButtonPressed = false;
 
 		altKeyPressed = false;
-
-		for (int i = 0; i < 10; i++)
-		{
-			particles.push_back(Particle(0.05f, 5.f, white, glm::vec3( 0.1f*i, 1.f, 0.f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -3.f, 0.f), 0.8f));
-		}
 
 		additionalShaderData.Pos = { 0.,0.,0. };
 	}
@@ -91,12 +91,17 @@ struct MyViewer : Viewer {
 		pCustomShaderData = &additionalShaderData;
 		CustomShaderDataSize = sizeof(VertexShaderAdditionalData);
 
+		spawningTimer += (elapsedTime - lastFrameElapsedTime);
+		if(spawningTimer > 1/spawningRate)
+		{
+			particles.push_back(Particle(particleRadius, particleLifetime, particleColor, glm::vec3(0.1f, 0.1f, 0.f), glm::vec3(float(rand()) / float((RAND_MAX)), initialVelocityFactor, float(rand()) / float((RAND_MAX))), glm::vec3(0.f, -3.f, 0.f), particleBounciness));
+			spawningTimer = 0;
+		}
+
+
 		std::vector<struct Particle>::iterator it;
 		for (it = particles.begin(); it < particles.end();) {
 
-			(*it).bounciness = particleBounciness;
-			(*it).lifetime = particleLifetime;
-			(*it).color = particleColor;
 			(*it).updateParticle(elapsedTime - lastFrameElapsedTime);
 			if ((*it).elapsedLife >= (*it).lifetime) {
 				it = particles.erase(it);
@@ -217,9 +222,11 @@ struct MyViewer : Viewer {
 
 		ImGui::Separator();
 		ImGui::SliderInt("Particle SpawningRate", &spawningRate, 1, 1000);
+		ImGui::SliderFloat("Particle Radius", &particleRadius, 0.01f, 0.1f);
 		ImGui::SliderFloat("Gravity Intensity", &gravityIntensity, -0.1f, -10.f);
 		ImGui::SliderFloat("Particle Lifetime", &particleLifetime, 0.1f, 10.f);
 		ImGui::SliderFloat("Particle Bounciness", &particleBounciness, 0.1f, 1.f);
+		ImGui::SliderFloat("Initial Velocity Factor", &initialVelocityFactor, 1.f, 10.f);
 		ImGui::ColorEdit4("Particle color", (float*)&particleColor, ImGuiColorEditFlags_NoInputs);
 			
 
