@@ -26,6 +26,7 @@ layout(std430, binding= 3) buffer bufferData
 	vec3 center;
 	float power;
 	float radius;
+	float time;
 } Data;
 
 out block //define the additional output that will be received by the fragment shader
@@ -52,14 +53,10 @@ void main()
 	#elif ShaderType == 1
 		//Let's bounce
 
-		float distanceFromBounce = sqrt( pow(Position.x - Data.center.x, 2.0) + pow(Position.y - Data.center.y, 2.0) );
+		float distanceFromBounce = length(Position- Data.center);
 		float distanceRate =  1 - clamp( distanceFromBounce/Data.radius, 0.0, 1.0);
 		vec4 NewPos = vec4(Position, 1);
-		NewPos.y += Data.power * distanceRate;
-
-		if(distanceFromBounce < 1.0){
-		    NewPos.y = 3.0;
-		}
+		NewPos.y += sin(Time) * Data.power * distanceRate;
 
 		Out.CameraSpacePosition = vec3(MV * NewPos);
 		Out.CameraSpaceNormal = vec3(MV * vec4(Normal, 0.0f));

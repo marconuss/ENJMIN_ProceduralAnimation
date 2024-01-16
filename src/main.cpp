@@ -26,6 +26,7 @@ struct VertexShaderAdditionalData {
 	glm::vec3 Pos;
 	float bouncePower;
 	float bounceRadius;
+	float bounceTime;
 };
 
 struct MyViewer : Viewer {
