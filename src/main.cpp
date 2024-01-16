@@ -30,7 +30,11 @@ struct MyViewer : Viewer {
 
 	double lastFrameElapsedTime = 0;
 
-	int numberOfParticles = 10;
+	float particleLifetime = 5.f;
+	float particleBounciness = 0.8f;
+	glm::vec4 particleColor = white;
+	int spawningRate = 100;
+	float gravityIntensity = -3;
 
 	glm::vec3 jointPosition;
 	glm::vec3 cubePosition;
@@ -61,7 +65,7 @@ struct MyViewer : Viewer {
 
 		altKeyPressed = false;
 
-		for (int i = 0; i < numberOfParticles; i++)
+		for (int i = 0; i < 10; i++)
 		{
 			particles.push_back(Particle(0.05f, 5.f, white, glm::vec3( 0.1f*i, 1.f, 0.f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -3.f, 0.f), 0.8f));
 		}
@@ -90,6 +94,9 @@ struct MyViewer : Viewer {
 		std::vector<struct Particle>::iterator it;
 		for (it = particles.begin(); it < particles.end();) {
 
+			(*it).bounciness = particleBounciness;
+			(*it).lifetime = particleLifetime;
+			(*it).color = particleColor;
 			(*it).updateParticle(elapsedTime - lastFrameElapsedTime);
 			if ((*it).elapsedLife >= (*it).lifetime) {
 				it = particles.erase(it);
@@ -208,7 +215,13 @@ struct MyViewer : Viewer {
 
 		ImGui::ColorEdit4("Background color", (float*)&backgroundColor, ImGuiColorEditFlags_NoInputs);
 
-		ImGui::SliderInt("number of particles", &numberOfParticles, 0, 100);
+		ImGui::Separator();
+		ImGui::SliderInt("Particle SpawningRate", &spawningRate, 1, 1000);
+		ImGui::SliderFloat("Gravity Intensity", &gravityIntensity, -0.1f, -10.f);
+		ImGui::SliderFloat("Particle Lifetime", &particleLifetime, 0.1f, 10.f);
+		ImGui::SliderFloat("Particle Bounciness", &particleBounciness, 0.1f, 1.f);
+		ImGui::ColorEdit4("Particle color", (float*)&particleColor, ImGuiColorEditFlags_NoInputs);
+			
 
 		//ImGui::SliderFloat("Point size", &pointSize, 0.1f, 10.f);
 		//ImGui::SliderFloat("Line Width", &lineWidth, 0.1f, 10.f);
