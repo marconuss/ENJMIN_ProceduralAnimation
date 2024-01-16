@@ -63,7 +63,7 @@ struct MyViewer : Viewer {
 
 		for (int i = 0; i < numberOfParticles; i++)
 		{
-			particles.push_back(Particle(0.05f, white, glm::vec3( 0.1f*i, 1.f, 0.f), glm::vec3(0.f, -0.1f, 0.f), glm::vec3(0.f, 0.f, 0.f)));
+			particles.push_back(Particle(0.05f, 5.f, white, glm::vec3( 0.1f*i, 1.f, 0.f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, -3.f, 0.f), 0.8f));
 		}
 
 		additionalShaderData.Pos = { 0.,0.,0. };
@@ -71,8 +71,6 @@ struct MyViewer : Viewer {
 
 
 	void update(double elapsedTime) override {
-
-
 
 		boneAngle = (float)elapsedTime;
 
@@ -89,8 +87,15 @@ struct MyViewer : Viewer {
 		pCustomShaderData = &additionalShaderData;
 		CustomShaderDataSize = sizeof(VertexShaderAdditionalData);
 
-		for (Particle& p : particles) {
-			p.updateParticle(elapsedTime - lastFrameElapsedTime);
+		std::vector<struct Particle>::iterator it;
+		for (it = particles.begin(); it < particles.end();) {
+
+			(*it).updateParticle(elapsedTime - lastFrameElapsedTime);
+			if ((*it).elapsedLife >= (*it).lifetime) {
+				it = particles.erase(it);
+			} else {
+				++it;
+			}
 		}
 
 		lastFrameElapsedTime = elapsedTime;

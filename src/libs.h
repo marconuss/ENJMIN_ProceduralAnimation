@@ -11,12 +11,16 @@ struct Particle
 {
 public:
 	float radius;
+	float lifetime;
 	glm::vec4 color;
 	glm::vec3 position;
 	glm::vec3 velocity;
 	glm::vec3 acceleration;
+	float bounciness;
 
-	Particle(float inRadius, glm::vec4 inColor, glm::vec3 inPosition, glm::vec3 inVelocity, glm::vec3 inAcceleration);
+	float elapsedLife = 0;
+
+	Particle(float inRadius, float inLifetime, glm::vec4 inColor, glm::vec3 inPosition, glm::vec3 inVelocity, glm::vec3 inAcceleration, float inBounciness);
 
 	void updateParticle(double deltaTime);
 };
