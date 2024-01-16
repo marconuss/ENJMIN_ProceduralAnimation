@@ -103,9 +103,9 @@ void renderEngineFrame(const RenderEngine& engine, const RenderParams& params) {
 		
 		GLuint ssbo = 0;
 		glGenBuffers(1, &ssbo);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo);
 		if (params.pCustomVertShaderData != nullptr) {
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo);
 			glBufferData(GL_SHADER_STORAGE_BUFFER, params.CustomVertShaderDataSize, params.pCustomVertShaderData, GL_DYNAMIC_COPY);
 		}
 		api3D.pShader3D = &shader3D_custom;
