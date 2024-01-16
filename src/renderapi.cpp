@@ -20,7 +20,7 @@ namespace {
 			assert(SizeInUse + Size < MAX_SIZE);
 			char* pToReturn = pCurrent;
 			pCurrent += Size + 4;
-			*(int*)pToReturn = Size;
+			*(int*)pToReturn = Size + 4;
 			SizeInUse += Size + 4;
 			return (void*)(pToReturn + 4);
 		}

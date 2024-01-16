@@ -24,6 +24,8 @@ constexpr glm::vec4 red = { 1.f, 0.f, 0.f, 1.f };
 
 struct VertexShaderAdditionalData {
 	glm::vec3 Pos;
+	float bouncePower;
+	float bounceRadius;
 };
 
 struct MyViewer : Viewer {
@@ -70,7 +72,9 @@ struct MyViewer : Viewer {
 
 		altKeyPressed = false;
 
-		additionalShaderData.Pos = { 0.,0.,0. };
+		additionalShaderData.Pos = { 0.,2.,0. };
+		additionalShaderData.bouncePower = 1.f;
+		additionalShaderData.bounceRadius = 2.f;
 	}
 
 
@@ -115,7 +119,7 @@ struct MyViewer : Viewer {
 
 	void render3D_custom(const RenderApi3D& api) const override {
 		//Here goes your drawcalls affected by the custom vertex shader
-		//api.horizontalPlane({ 0, 2, 0 }, { 4, 4 }, 200, glm::vec4(0.0f, 0.2f, 1.f, 1.f));
+		api.horizontalPlane(additionalShaderData.Pos, { 4, 4 }, 200, glm::vec4(0.0f, 0.2f, 1.f, 1.f));
 	}
 
 	void render3D(const RenderApi3D& api) const override {
