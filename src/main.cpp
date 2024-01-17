@@ -14,6 +14,7 @@
 
 
 #define COUNTOF(ARRAY) (sizeof(ARRAY) / sizeof(ARRAY[0]))
+#define BOUNCE_ARRAY_SIZE 5
 
 constexpr char const* viewerName = "MyViewer";
 constexpr glm::vec4 white = { 1.f, 1.f, 1.f, 1.f };
@@ -23,10 +24,14 @@ constexpr glm::vec4 red = { 1.f, 0.f, 0.f, 1.f };
 
 
 struct VertexShaderAdditionalData {
-	glm::vec3 Pos;
 	float bouncePower;
 	float bounceRadius;
-	float bounceTime;
+	float bounceDuration;
+	float bounceSpeed;
+
+	int count;
+	int padding[3];
+	glm::vec4 posAndTime[BOUNCE_ARRAY_SIZE];
 };
 
 struct MyViewer : Viewer {
@@ -95,15 +100,17 @@ struct MyViewer : Viewer {
 			boids.push_back(Boid(randomPos, glm::vec3(0.f, 0.f, 0.f), initialRandomAcceleration));
 		}
 		
-		additionalShaderData.Pos = { 0.,2.,0. };
-		additionalShaderData.bouncePower = 1.f;
-		additionalShaderData.bounceRadius = 2.f;
+		additionalShaderData.bouncePower = 0.5f;
+		additionalShaderData.bounceRadius = 1.0f;
+		additionalShaderData.bounceDuration = 1.f;
+		additionalShaderData.bounceSpeed = 30.f;
+		additionalShaderData.count = 0;
 	}
 
 
 	void update(double elapsedTime) override {
 
-		float deltaTime = elapsedTime - lastFrameElapsedTime;
+		float deltaTime = (float)elapsedTime - (float)lastFrameElapsedTime;
 
 		boneAngle = (float)elapsedTime;
 
@@ -116,6 +123,28 @@ struct MyViewer : Viewer {
 		glfwGetCursorPos(window, &mouseX, &mouseY);
 
 		mousePos = { float(mouseX), viewportHeight - float(mouseY) };
+
+		if (leftMouseButtonPressed) {
+			float xrand = (4 * rand() / (float)RAND_MAX) - 2;
+			float zrand = (4 * rand() / (float)RAND_MAX) - 2;
+			glm::vec4 posAndTime = glm::vec4( xrand, 2.0, zrand, elapsedTime );
+
+			if(additionalShaderData.count < BOUNCE_ARRAY_SIZE){
+				additionalShaderData.posAndTime[additionalShaderData.count] = posAndTime;
+				additionalShaderData.count++;
+			} else {
+
+				int oldest = 0;
+				for (size_t i = 0; i < additionalShaderData.count; i++) {
+					if (additionalShaderData.posAndTime[i].w < additionalShaderData.posAndTime[oldest].w) {
+						oldest = i;
+					}
+				}
+				additionalShaderData.posAndTime[oldest] = posAndTime;
+
+			}
+		}
+		
 
 		pCustomShaderData = &additionalShaderData;
 		CustomShaderDataSize = sizeof(VertexShaderAdditionalData);
@@ -161,7 +190,7 @@ struct MyViewer : Viewer {
 
 	void render3D_custom(const RenderApi3D& api) const override {
 		//Here goes your drawcalls affected by the custom vertex shader
-		api.horizontalPlane(additionalShaderData.Pos, { 4, 4 }, 200, glm::vec4(0.0f, 0.2f, 1.f, 1.f));
+		api.horizontalPlane(glm::vec3( 0., 2.0, 0. ), { 4, 4 }, 200, glm::vec4(0.0f, 0.2f, 1.f, 1.f));
 	}
 
 	void render3D(const RenderApi3D& api) const override {

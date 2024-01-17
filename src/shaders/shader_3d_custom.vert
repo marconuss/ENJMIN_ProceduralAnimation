@@ -6,6 +6,7 @@
 #define BufferAttribNormal 1
 #define BufferAttribColor 2
 #define ShaderType 1
+#define M_PI 3.14159
 
 
 //-- Uniform are variable that are common to all vertices of the drawcall
@@ -23,10 +24,13 @@ layout(location = BufferAttribColor) in vec4 Color;			// Color of current vertex
 //-- Here is the GPU counterpart of the VertexShaderAdditionalData structure
 layout(std430, binding= 3) buffer bufferData
 { 
-	vec3 center;
 	float power;
 	float radius;
-	float time;
+	float duration;
+	float speed;
+
+	int count;
+	vec4 centerAndTime[];
 } Data;
 
 out block //define the additional output that will be received by the fragment shader
@@ -53,14 +57,22 @@ void main()
 	#elif ShaderType == 1
 		//Let's bounce
 
-		float distanceFromBounce = length(Position- Data.center);
-		float distanceRate =  1 - clamp( distanceFromBounce/Data.radius, 0.0, 1.0);
 		vec4 NewPos = vec4(Position, 1);
-		NewPos.y += sin(Time) * Data.power * distanceRate;
+
+		for(int i=0; i<Data.count;i++){
+			vec3 position = {Data.centerAndTime[i].x, Data.centerAndTime[i].y, Data.centerAndTime[i].z};
+			float hitTime = Data.centerAndTime[i].w;
+			float distanceFromBounce = length(Position- position);
+			float distanceRate = 1.0 - clamp( distanceFromBounce/Data.radius, 0.0f, 1.0f);
+			float timeScale = clamp((Time - hitTime) / Data.duration, 0.0, 1.0);
+			
+			NewPos.y += sin(Time  * Data.speed)  * Data.power * smoothstep(0, 1, distanceRate) * (1.0-timeScale);
+		}
 
 		Out.CameraSpacePosition = vec3(MV * NewPos);
 		Out.CameraSpaceNormal = vec3(MV * vec4(Normal, 0.0f));
 		Out.Color = Color;
+		Out.Color.g = abs(Position.y - NewPos.y);
 		gl_Position = Projection * MV * NewPos;
 
 
