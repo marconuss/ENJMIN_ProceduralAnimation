@@ -56,6 +56,8 @@ public:
 	glm::vec3 RelativePosition;
 	glm::vec3 AbsolutePosition;
 
-	Joint(glm::vec3 inAngles, glm::quat RelativeRotation, glm::vec3 RelativePosition);
+	Joint(glm::vec3 inAngles, glm::quat inRelativeRotation, glm::vec3 inRelativePosition);
 
+
+	void updateJoint(glm::quat parentAbsolureRotation, glm::vec3 parentAbsolutePosition);
 };

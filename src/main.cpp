@@ -66,6 +66,12 @@ struct MyViewer : Viewer {
 	// Forward Kinematics
 	std::vector<Joint> bones;
 
+	// IK
+	glm::vec3 targetPosition;
+	Joint hip = Joint(glm::vec3(0.f, 0.f, 0.f), glm::quat(0.f, 0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f));
+	Joint knee = Joint(glm::vec3(0.f, 0.f, 0.f), glm::quat(0.f, 0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f));
+	Joint heel = Joint(glm::vec3(0.f, 0.f, 0.f), glm::quat(0.f, 0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f));
+
 	//-----------
 
 	glm::vec3 jointPosition;
@@ -131,6 +137,10 @@ struct MyViewer : Viewer {
 			glm::quat q = glm::angleAxis(boneAngle, glm::vec3{ 0.f, 1.f, 0.f });
 			bones.push_back(Joint(glm::vec3(0.f, 0.f, 0.f), q, glm::vec3{ 0.f, 0.f, 0.f }));
 		}
+
+		// IK
+		targetPosition = glm::vec3(0.f, 0.f, 0.f);
+
 	}
 
 
@@ -225,10 +235,11 @@ struct MyViewer : Viewer {
 
 			bones[i].RelativePosition = childRelPos;
 			bones[i].RelativeRotation = q;
+
+
 			if (i > 0)
 			{
-				bones[i].AbsoluteRotation = bones[i - 1].AbsoluteRotation * bones[i].RelativeRotation;
-				bones[i].AbsolutePosition = bones[i - 1].AbsolutePosition + bones[i - 1].AbsoluteRotation * bones[i].RelativePosition;
+				bones[i].updateJoint(bones[i - 1].AbsoluteRotation, bones[i - 1].AbsolutePosition);
 			}
 			else
 			{
@@ -239,6 +250,8 @@ struct MyViewer : Viewer {
 				bones[i].AbsolutePosition = bones[i].RelativePosition;
 			}
 		}
+
+		// IK
 
 
 		lastFrameElapsedTime = elapsedTime;
@@ -312,6 +325,9 @@ struct MyViewer : Viewer {
 				api.solidSphere(bones[i].AbsolutePosition, 0.05f, 5, 5, white);
 			}
 		}
+
+		// IK
+
 	}
 
 	void render2D(const RenderApi2D& api) const override {
