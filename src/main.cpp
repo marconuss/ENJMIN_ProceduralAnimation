@@ -72,7 +72,11 @@ struct MyViewer : Viewer {
 	Joint knee = Joint(glm::vec3(0.f, 0.f, 0.f), glm::quat(0.f, 0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f));
 	Joint heel = Joint(glm::vec3(0.f, 0.f, 0.f), glm::quat(0.f, 0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f));
 
-	float boneLength = 1.f;
+	float hipAngle_0 = 0;
+	float hipAngle_1 = 0;
+	float kneeAngle_0 = 0;
+	float kneeAngle_1 = 0;
+
 	//-----------
 
 	glm::vec3 jointPosition;
@@ -265,6 +269,20 @@ struct MyViewer : Viewer {
 		*/
 
 		// IK
+		float targetDistance = glm::clamp(glm::distance(targetPosition, hip.AbsolutePosition), 0.1f, 1.9f); 
+
+		hipAngle_0 = glm::clamp(glm::acos(glm::dot(glm::normalize(heel.AbsolutePosition - hip.AbsolutePosition), glm::normalize(knee.AbsolutePosition - hip.AbsolutePosition))), -1.f, 1.f);
+		kneeAngle_0 = glm::clamp(glm::acos(glm::dot(glm::normalize(hip.AbsolutePosition - knee.AbsolutePosition), glm::normalize(heel.AbsolutePosition - knee.AbsolutePosition))), -1.f, 1.f);
+
+		hipAngle_1 = glm::acos(glm::clamp((1.f - 1.f - targetDistance * targetDistance)/(-2.f * 1.f * targetDistance), -1.f, 1.f));
+		kneeAngle_1= glm::acos(glm::clamp((targetDistance * targetDistance -1.f -1.f)/(-2.f * 1.f * 1.f), -1.f, 1.f));
+
+		//vec3 axis0 = normalize(cross(c - a, b - a));
+		//quat r0 = quat_angle_axis(ac_ab_1 - ac_ab_0, quat_mul(quat_inv(a_gr), axis0)));
+		//quat r1 = quat_angle_axis(ba_bc_1 - ba_bc_0, quat_mul(quat_inv(b_gr), axis0)));
+
+		glm::vec3 axis0 = glm::normalize(glm::cross(heel.AbsolutePosition - hip.AbsolutePosition, knee.AbsolutePosition - hip.AbsolutePosition));
+		//glm::quat r0 = glm::angleAxis(hipAngle_1 - hipAngle_0, glm::cross(glm::inverse(hip.AbsoluteRotation)));
 
 		// hip		
 		hip.updateJoint(glm::identity<glm::quat>(), glm::vec3(0.f, 0.f,0.f));
@@ -272,6 +290,7 @@ struct MyViewer : Viewer {
 		knee.updateJoint(hip.AbsoluteRotation, hip.AbsolutePosition);
 		// heel
 		heel.updateJoint(knee.AbsoluteRotation, knee.AbsolutePosition);
+
 
 		lastFrameElapsedTime = elapsedTime;
 
