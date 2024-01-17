@@ -109,6 +109,8 @@ glm::vec3 Boid::cohesion(const std::vector<Boid>& boids, float fieldOfVision, fl
 
 void Boid::updateBoid(double deltaTime)
 {
+
+	position += velocity * (float)deltaTime;
 	velocity += acceleration * (float)deltaTime;
 	float maxSpeed = 1.f;
 	if (glm::length(velocity) > maxSpeed)
@@ -126,5 +128,12 @@ void Boid::updateBoid(double deltaTime)
 		velocity.z = -velocity.z;
 	}
 
-	position += velocity * (float)deltaTime;
 }
+
+Joint::Joint(glm::vec3 inAngles, glm::quat inRelativeRotation, glm::vec3 inRelativePosition)
+{
+	angles = inAngles;
+	RelativePosition = inRelativePosition;
+	RelativeRotation = inRelativeRotation;
+}
+

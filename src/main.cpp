@@ -36,8 +36,9 @@ struct VertexShaderAdditionalData {
 
 struct MyViewer : Viewer {
 
-	double lastFrameElapsedTime = 0;
-	//particles
+	//-----------
+	// particles
+	/*
 	std::vector<Particle> particles;
 	float particleRadius = 0.05f;
 	float particleLifetime = 5.f;
@@ -48,18 +49,30 @@ struct MyViewer : Viewer {
 	double spawningTimer = 0;
 	glm::vec3 particleDirection;
 	float initialVelocityFactor = 1;
+	*/
 
-	//boids
+	// boids
+	/*
 	std::vector<Boid> boids;
 	float coherence;
 	float separation;
 	float alignment;
 	float visualRange;
+	*/
+
+
+	double lastFrameElapsedTime = 0;
+
+	// Forward Kinematics
+	std::vector<Joint> bones;
+
+	//-----------
 
 	glm::vec3 jointPosition;
 	glm::vec3 cubePosition;
 	glm::vec3 ballPosition;
 	float boneAngle;
+
 
 	glm::vec2 mousePos;
 
@@ -74,11 +87,14 @@ struct MyViewer : Viewer {
 	MyViewer() : Viewer(viewerName, 1280, 720) {}
 
 	void init() override {
+
+		/*
+		// Boids
 		coherence = 0.5f;
 		separation = 1.f;
 		alignment = 1.f;
 		visualRange = 0.1f;
-
+		*/
 		cubePosition = glm::vec3(1.f, 0.25f, -1.f);
 		jointPosition = glm::vec3(-1.f, 2.f, -1.f);
 		ballPosition = glm::vec3(-1.f, 0.5f, 1.f);
@@ -88,23 +104,33 @@ struct MyViewer : Viewer {
 
 		altKeyPressed = false;
 
-
+		// Boids
+		/*
 		for (int i = 0; i < 200; i++)
 		{
-			float xrand = (4*rand() / (float)RAND_MAX) -2; 
-			float yrand = (4*rand() / (float)RAND_MAX); 
-			float zrand = (4*rand() / (float)RAND_MAX) -2; 
+			float xrand = (4*rand() / (float)RAND_MAX) -2;
+			float yrand = (4*rand() / (float)RAND_MAX);
+			float zrand = (4*rand() / (float)RAND_MAX) -2;
 			glm::vec3 randomPos = glm::vec3(xrand, yrand, zrand);
 			glm::vec3 initialRandomAcceleration = glm::vec3(-1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (1 - (-1.0f)))), -1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (1.0f - (-1.0f)))), -1.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (1.0f - (-1.0f)))));
 
 			boids.push_back(Boid(randomPos, glm::vec3(0.f, 0.f, 0.f), initialRandomAcceleration));
 		}
-		
+		*/
+
 		additionalShaderData.bouncePower = 0.5f;
 		additionalShaderData.bounceRadius = 1.0f;
 		additionalShaderData.bounceDuration = 1.f;
 		additionalShaderData.bounceSpeed = 30.f;
 		additionalShaderData.count = 0;
+
+		// Forward Kinematic
+		for (int i = 0; i < 3; i++)
+		{
+			glm::vec3 childRelPos = { 0.f, 0.f, 0.f };
+			glm::quat q = glm::angleAxis(boneAngle, glm::vec3{ 0.f, 1.f, 0.f });
+			bones.push_back(Joint(glm::vec3(0.f, 0.f, 0.f), q, glm::vec3{ 0.f, 0.f, 0.f }));
+		}
 	}
 
 
@@ -112,7 +138,7 @@ struct MyViewer : Viewer {
 
 		float deltaTime = (float)elapsedTime - (float)lastFrameElapsedTime;
 
-		boneAngle = (float)elapsedTime;
+		//boneAngle = (float)elapsedTime;
 
 		leftMouseButtonPressed = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
@@ -127,12 +153,13 @@ struct MyViewer : Viewer {
 		if (leftMouseButtonPressed) {
 			float xrand = (4 * rand() / (float)RAND_MAX) - 2;
 			float zrand = (4 * rand() / (float)RAND_MAX) - 2;
-			glm::vec4 posAndTime = glm::vec4( xrand, 2.0, zrand, elapsedTime );
+			glm::vec4 posAndTime = glm::vec4(xrand, 2.0, zrand, elapsedTime);
 
-			if(additionalShaderData.count < BOUNCE_ARRAY_SIZE){
+			if (additionalShaderData.count < BOUNCE_ARRAY_SIZE) {
 				additionalShaderData.posAndTime[additionalShaderData.count] = posAndTime;
 				additionalShaderData.count++;
-			} else {
+			}
+			else {
 
 				int oldest = 0;
 				for (size_t i = 0; i < additionalShaderData.count; i++) {
@@ -144,11 +171,12 @@ struct MyViewer : Viewer {
 
 			}
 		}
-		
+
 
 		pCustomShaderData = &additionalShaderData;
 		CustomShaderDataSize = sizeof(VertexShaderAdditionalData);
 
+		// Particles
 		/*
 		spawningTimer += (elapsedTime - lastFrameElapsedTime);
 		if(spawningTimer > 1/spawningRate)
@@ -170,6 +198,8 @@ struct MyViewer : Viewer {
 		}
 		*/
 
+		// Boids
+		/*
 		std::vector<struct Boid>::iterator it;
 		for (it = boids.begin(); it < boids.end();) {
 			glm::vec3 sep = it->separation(boids, separation);
@@ -183,6 +213,32 @@ struct MyViewer : Viewer {
 			it->updateBoid(deltaTime);
 			++it;
 		}
+		*/
+
+		// Forward Kinematic
+		// calculate bones0
+		for (int i = 0; i < bones.size(); i++)
+		{
+			glm::vec3 childRelPos = { 0.f, 1.f, 0.f };
+			glm::quat q = glm::eulerAngleXYZ(glm::radians(bones[i].angles.x), glm::radians(bones[i].angles.y), glm::radians(bones[i].angles.z));
+			glm::vec3 childAbsPos = q * childRelPos;
+
+			bones[i].RelativePosition = childRelPos;
+			bones[i].RelativeRotation = q;
+			if (i > 0)
+			{
+				bones[i].AbsoluteRotation = bones[i - 1].AbsoluteRotation * bones[i].RelativeRotation;
+				bones[i].AbsolutePosition = bones[i - 1].AbsolutePosition + bones[i - 1].AbsoluteRotation * bones[i].RelativePosition;
+			}
+			else
+			{
+				glm::vec3 initialPosition = glm::vec3(0.f, 0.f, 0.f);
+				glm::quat initialRotation = glm::angleAxis(boneAngle, glm::vec3{ 0.f, 1.f, 0.f });
+				bones[i].RelativePosition = initialPosition;
+				bones[i].AbsoluteRotation = bones[i].RelativeRotation;
+				bones[i].AbsolutePosition = bones[i].RelativePosition;
+			}
+		}
 
 
 		lastFrameElapsedTime = elapsedTime;
@@ -190,7 +246,7 @@ struct MyViewer : Viewer {
 
 	void render3D_custom(const RenderApi3D& api) const override {
 		//Here goes your drawcalls affected by the custom vertex shader
-		api.horizontalPlane(glm::vec3( 0., 2.0, 0. ), { 4, 4 }, 200, glm::vec4(0.0f, 0.2f, 1.f, 1.f));
+		//api.horizontalPlane(glm::vec3( 0., 2.0, 0. ), { 4, 4 }, 200, glm::vec4(0.0f, 0.2f, 1.f, 1.f));
 	}
 
 	void render3D(const RenderApi3D& api) const override {
@@ -199,6 +255,8 @@ struct MyViewer : Viewer {
 		api.grid(10.f, 10, glm::vec4(0.5f, 0.5f, 0.5f, 1.f), nullptr);
 
 		api.axisXYZ(nullptr);
+
+
 		/*
 		constexpr float cubeSize = 0.5f;
 		glm::mat4 cubeModelMatrix = glm::translate(glm::identity<glm::mat4>(), cubePosition);
@@ -236,12 +294,24 @@ struct MyViewer : Viewer {
 			api.lines(vertices, COUNTOF(vertices), white, nullptr);
 		}*/
 
+		// boids
+		/*
 		for each(Boid b in boids)
 		{
 			api.solidSphere(b.position, 0.05f, 5, 5, white);
-
 		}
+		*/
 
+		// Forward Kinematic
+
+		for (int i = 0; i < bones.size(); i++)
+		{
+			if (i > 0)
+			{
+				api.bone(bones[i].RelativePosition, white, bones[i - 1].AbsoluteRotation, bones[i - 1].AbsolutePosition);
+				api.solidSphere(bones[i].AbsolutePosition, 0.05f, 5, 5, white);
+			}
+		}
 	}
 
 	void render2D(const RenderApi2D& api) const override {
@@ -298,24 +368,8 @@ struct MyViewer : Viewer {
 		ImGui::ColorEdit4("Background color", (float*)&backgroundColor, ImGuiColorEditFlags_NoInputs);
 
 		ImGui::Separator();
-		// particles
-		
-		//ImGui::SliderInt("Particle SpawningRate", &spawningRate, 1, 1000);
-		//ImGui::SliderFloat("Particle Radius", &particleRadius, 0.01f, 0.1f);
-		//ImGui::SliderFloat("Gravity Intensity", &gravityIntensity, -0.1f, -10.f);
-		//ImGui::SliderFloat("Particle Lifetime", &particleLifetime, 0.1f, 10.f);
-		//ImGui::SliderFloat("Particle Bounciness", &particleBounciness, 0.1f, 1.f);
-		//ImGui::SliderFloat("Initial Velocity Factor", &initialVelocityFactor, 1.f, 10.f);
-		//ImGui::ColorEdit4("Particle color", (float*)&particleColor, ImGuiColorEditFlags_NoInputs);
-
-		//boids
-		ImGui::SliderFloat("Coherence", &coherence, 0.f, 3.f);
-		ImGui::SliderFloat("Separation", &separation, 0.f, 3.f);
-		ImGui::SliderFloat("Alignment", &alignment, 0.f, 3.f);
-		ImGui::SliderFloat("Visual Range", &visualRange, 0.f, 3.f);
 
 
-		ImGui::Separator();
 		//ImGui::SliderFloat("Point size", &pointSize, 0.1f, 10.f);
 		//ImGui::SliderFloat("Line Width", &lineWidth, 0.1f, 10.f);
 		//ImGui::Separator();
@@ -332,6 +386,36 @@ struct MyViewer : Viewer {
 		}
 
 		//ImGui::SliderFloat3("Cube Position", (float(&)[3])cubePosition, -1.f, 1.f);
+
+		// particles
+		/*
+		ImGui::SliderInt("Particle SpawningRate", &spawningRate, 1, 1000);
+		ImGui::SliderFloat("Particle Radius", &particleRadius, 0.01f, 0.1f);
+		ImGui::SliderFloat("Gravity Intensity", &gravityIntensity, -0.1f, -10.f);
+		ImGui::SliderFloat("Particle Lifetime", &particleLifetime, 0.1f, 10.f);
+		ImGui::SliderFloat("Particle Bounciness", &particleBounciness, 0.1f, 1.f);
+		ImGui::SliderFloat("Initial Velocity Factor", &initialVelocityFactor, 1.f, 10.f);
+		ImGui::ColorEdit4("Particle color", (float*)&particleColor, ImGuiColorEditFlags_NoInputs);*/
+
+		// boids
+		/*
+		 *ImGui::SliderFloat("Coherence", &coherence, 0.f, 3.f);
+		ImGui::SliderFloat("Separation", &separation, 0.f, 3.f);
+		ImGui::SliderFloat("Alignment", &alignment, 0.f, 3.f);
+		ImGui::SliderFloat("Visual Range", &visualRange, 0.f, 3.f);
+		*/
+
+		// forward kinematic
+
+		for (int i = 0; i < bones.size() -1; i++)
+		{
+			ImGui::PushID(i); 
+			ImGui::SliderFloat("Bone Angle X", &bones[i].angles.x, 0.f, 360.f);
+			ImGui::SliderFloat("Bone Angle Y", &bones[i].angles.y, 0.f, 360.f);
+			ImGui::SliderFloat("Bone Angle Z", &bones[i].angles.z, 0.f, 360.f);
+			ImGui::PopID();
+		}
+
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 

@@ -45,3 +45,17 @@ public:
 	void updateBoid(double deltaTime);
 
 };
+
+struct Joint
+{
+public:
+	
+	glm::vec3 angles;
+	glm::quat RelativeRotation;
+	glm::quat AbsoluteRotation;
+	glm::vec3 RelativePosition;
+	glm::vec3 AbsolutePosition;
+
+	Joint(glm::vec3 inAngles, glm::quat RelativeRotation, glm::vec3 RelativePosition);
+
+};
