@@ -72,6 +72,7 @@ struct MyViewer : Viewer {
 	Joint knee = Joint(glm::vec3(0.f, 0.f, 0.f), glm::quat(0.f, 0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f));
 	Joint heel = Joint(glm::vec3(0.f, 0.f, 0.f), glm::quat(0.f, 0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f));
 
+	float boneLength = 1.f;
 	//-----------
 
 	glm::vec3 jointPosition;
@@ -131,15 +132,25 @@ struct MyViewer : Viewer {
 		additionalShaderData.count = 0;
 
 		// Forward Kinematic
+		/*
 		for (int i = 0; i < 3; i++)
 		{
-			glm::vec3 childRelPos = { 0.f, 0.f, 0.f };
 			glm::quat q = glm::angleAxis(boneAngle, glm::vec3{ 0.f, 1.f, 0.f });
 			bones.push_back(Joint(glm::vec3(0.f, 0.f, 0.f), q, glm::vec3{ 0.f, 0.f, 0.f }));
 		}
+		*/
 
 		// IK
 		targetPosition = glm::vec3(0.f, 0.f, 0.f);
+
+		// root
+		hip.RelativePosition = glm::vec3(0.f, 2.f, 0.f);
+		hip.RelativeRotation = glm::identity<glm::quat>();
+		hip.AbsolutePosition = hip.RelativePosition;
+		hip.AbsoluteRotation = hip.RelativeRotation;
+
+		knee.RelativePosition = glm::vec3(0.f, -1.f, 0.f);
+		heel.RelativePosition = glm::vec3(0.f, -1.f, 0.f);
 
 	}
 
@@ -227,6 +238,7 @@ struct MyViewer : Viewer {
 
 		// Forward Kinematic
 		// calculate bones0
+		/*
 		for (int i = 0; i < bones.size(); i++)
 		{
 			glm::vec3 childRelPos = { 0.f, 1.f, 0.f };
@@ -250,11 +262,20 @@ struct MyViewer : Viewer {
 				bones[i].AbsolutePosition = bones[i].RelativePosition;
 			}
 		}
+		*/
 
 		// IK
 
+		// hip		
+		hip.updateJoint(glm::identity<glm::quat>(), glm::vec3(0.f, 0.f,0.f));
+		// knee
+		knee.updateJoint(hip.AbsoluteRotation, hip.AbsolutePosition);
+		// heel
+		heel.updateJoint(knee.AbsoluteRotation, knee.AbsolutePosition);
 
 		lastFrameElapsedTime = elapsedTime;
+
+
 	}
 
 	void render3D_custom(const RenderApi3D& api) const override {
@@ -316,7 +337,7 @@ struct MyViewer : Viewer {
 		*/
 
 		// Forward Kinematic
-
+		/*
 		for (int i = 0; i < bones.size(); i++)
 		{
 			if (i > 0)
@@ -325,8 +346,20 @@ struct MyViewer : Viewer {
 				api.solidSphere(bones[i].AbsolutePosition, 0.05f, 5, 5, white);
 			}
 		}
+		*/
 
 		// IK
+
+		// knee bone
+		api.bone(knee.RelativePosition, white, hip.AbsoluteRotation, hip.AbsolutePosition);
+		api.solidSphere(knee.AbsolutePosition, 0.05f, 5, 5, white);
+
+		// heel bone
+		api.bone(heel.RelativePosition, white, knee.AbsoluteRotation, knee.AbsolutePosition);
+		api.solidSphere(heel.AbsolutePosition, 0.05f, 5, 5, white);
+
+		// target
+		api.solidSphere(targetPosition, 0.1f, 5, 5, red);
 
 	}
 
@@ -423,15 +456,15 @@ struct MyViewer : Viewer {
 
 		// forward kinematic
 
-		for (int i = 0; i < bones.size() -1; i++)
-		{
-			ImGui::PushID(i); 
-			ImGui::SliderFloat("Bone Angle X", &bones[i].angles.x, 0.f, 360.f);
-			ImGui::SliderFloat("Bone Angle Y", &bones[i].angles.y, 0.f, 360.f);
-			ImGui::SliderFloat("Bone Angle Z", &bones[i].angles.z, 0.f, 360.f);
-			ImGui::PopID();
-		}
+		ImGui::SliderFloat("Hip Angle X", &hip.angles.x, 0.f, 360.f);
+		ImGui::SliderFloat("Hip Angle Y", &hip.angles.y, 0.f, 360.f);
+		ImGui::SliderFloat("Hip Angle Z", &hip.angles.z, 0.f, 360.f);
 
+		ImGui::SliderFloat("Knee Angle X", &knee.angles.x, 0.f, 360.f);
+		ImGui::SliderFloat("Knee Angle Y", &knee.angles.y, 0.f, 360.f);
+		ImGui::SliderFloat("Knee Angle Z", &knee.angles.z, 0.f, 360.f);
+
+		ImGui::SliderFloat3("Cube Position", (float(&)[3])targetPosition, -1.f, 1.f);
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 

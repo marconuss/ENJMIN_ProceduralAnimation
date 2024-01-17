@@ -139,25 +139,12 @@ Joint::Joint(glm::vec3 inAngles, glm::quat inRelativeRotation, glm::vec3 inRelat
 
 void Joint::updateJoint(glm::quat parentAbsoluteRotation, glm::vec3 parentAbsolutePosition)
 {
-	glm::vec3 childRelPos = { 0.f, 1.f, 0.f };
 	glm::quat q = glm::eulerAngleXYZ(glm::radians(angles.x), glm::radians(angles.y), glm::radians(angles.z));
-	glm::vec3 childAbsPos = q * childRelPos;
+	glm::vec3 childAbsPos = q * RelativePosition;
 
-	RelativePosition = childRelPos;
 	RelativeRotation = q;
 	AbsoluteRotation = parentAbsoluteRotation * RelativeRotation;
 	AbsolutePosition = parentAbsolutePosition + parentAbsoluteRotation * RelativePosition;
-
-	/*
-	else
-	{
-		glm::vec3 initialPosition = glm::vec3(0.f, 0.f, 0.f);
-		glm::quat initialRotation = glm::angleAxis(boneAngle, glm::vec3{ 0.f, 1.f, 0.f });
-		bones[i].RelativePosition = initialPosition;
-		bones[i].AbsoluteRotation = bones[i].RelativeRotation;
-		bones[i].AbsolutePosition = bones[i].RelativePosition;
-	}
-	*/
 }
 
 
